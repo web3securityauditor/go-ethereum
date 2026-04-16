@@ -88,3 +88,25 @@ func TestPeerSet(t *testing.T) {
 		t.Fatalf("bad size")
 	}
 }
+
+func TestBufferReceiptsRejectsOversizedIncompleteResponse(t *testing.T) {
+	const requestID = 1
+
+	peer := &Peer{
+		receiptBuffer: map[uint64]*receiptRequest{
+			requestID: {
+				request:    []common.Hash{{0x01}},
+				gasUsed:    []uint64{21000},
+				timestamps: []uint64{1},
+			},
+		},
+	}
+
+	err := peer.bufferReceipts(requestID, []*ReceiptList{{}, {}}, true, nil)
+	if err == nil || err.Error() != "invalid receipt count in partial response" {
+		t.Fatalf("expected oversized partial response error, got %v", err)
+	}
+	if _, ok := peer.receiptBuffer[requestID]; ok {
+		t.Fatal("expected receipt buffer entry to be removed")
+	}
+}

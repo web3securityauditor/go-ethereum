@@ -463,6 +463,10 @@ func (p *Peer) bufferReceipts(requestId uint64, receiptLists []*ReceiptList, las
 		if len(buffer.list) > 0 {
 			lastBlock += len(buffer.list) - 1
 		}
+		if lastBlock >= len(buffer.gasUsed) || lastBlock >= len(buffer.timestamps) {
+			delete(p.receiptBuffer, requestId)
+			return errors.New("invalid receipt count in partial response")
+		}
 		gasUsed := buffer.gasUsed[lastBlock]
 		timestamp := buffer.timestamps[lastBlock]
 		logSize, err := p.validateLastBlockReceipt(receiptLists, requestId, gasUsed, timestamp)
